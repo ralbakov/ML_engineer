@@ -26,11 +26,11 @@ for var in list_col_bool:
     cat_list='var'+'_'+var
     cat_list = pd.get_dummies(data_train[var], prefix=var)
     data1=data_train.join(cat_list)
-    data=data1
+    data_train=data1
 cat_vars=['feature_3', 'feature_9', 'feature_10', 'feature_11', 'feature_12', 'feature_13', 'feature_14', 'feature_15']
-data_vars=data.columns.values.tolist()
+data_vars=data_train.columns.values.tolist()
 to_keep=[i for i in data_vars if i not in cat_vars]
-data_final=data[to_keep]
+data_final=data_train[to_keep]
 data_final.columns.values
 
 X = data_final.loc[:, data_final.columns.str.startswith('feature')]
@@ -48,26 +48,33 @@ print("Proportion of no subscription data in oversampled data is ",len(os_data_y
 print("Proportion of subscription data in oversampled data is ",len(os_data_y[os_data_y['target']==1])/len(os_data_X))
 
 
-data_final_vars=data.columns.values.tolist()
+data_final_vars=data_train.columns.values.tolist()
 y=['target']
 X=[i for i in data_final_vars if i not in y]
 
-logreg = LogisticRegression()
-rfe = RFE(logreg, n_features_to_select=5)
+logreg = LogisticRegression(max_iter=30000)
+rfe = RFE(logreg, n_features_to_select=20, step=1)
 rfe = rfe.fit(os_data_X, os_data_y.values.ravel())
-cols = list(rfe.get_feature_names_out())
+rfe.get_feature_names_out()
+cols = ['feature_27', 'feature_28', 'feature_33', 
+        'feature_70', 'feature_72', 'feature_3_0', 
+        'feature_3_1', 'feature_9_0', 'feature_9_1', 
+        'feature_10_0', 'feature_10_1', 'feature_11_0', 
+        'feature_11_1', 'feature_12_0', 'feature_12_1', 
+        'feature_13_0', 'feature_13_1', 'feature_14_0', 
+        'feature_14_1']
 X=os_data_X[cols]
 y=os_data_y['target']
 
-logit_model=sm.Logit(y,X)
-result=logit_model.fit()
-print(result.summary2())
+# logit_model=sm.Logit(y,X)
+# result=logit_model.fit()
+# print(result.summary2())
 
 X_test = data_test.drop('target', axis=1)
 y_test = data_test['target']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-logreg = LogisticRegression()
+logreg = LogisticRegression(max_iter=30000)
 logreg.fit(X_train, y_train)
 y_pred = logreg.predict(X_test)
 
